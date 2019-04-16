@@ -1,3 +1,6 @@
+#!/user/bin/python
+# -*- coding: utf-8 -*-
+
 # A dictionary of movie critics and their ratings of a small
 # set of movies
 critics={
@@ -133,7 +136,7 @@ def getRecommendations(prefs,person,similarity=sim_pearson):
       if item not in prefs[person] or prefs[person][item]==0:
         # 相似度 * 评价值
         totals.setdefault(item,0)
-        totals[item]+=prefs[other][item]*si
+        totals[item]+=prefs[other][item]*sim
         # 相似度之和
         simSums.setdefault(item,0)
         simSums[item]+=sim
@@ -145,4 +148,17 @@ def getRecommendations(prefs,person,similarity=sim_pearson):
   rankings.sort()
   rankings.reverse()
   return rankings
+
+
+# 通过查看哪些人喜欢某一特定商品，以及这些人喜欢哪些其他物品来决定相似度
+# 这和之前用来决定人与人之间相似度的方法是一样的，只需将人员和物品对换
+def transformPrefs(prefs):
+  result={}
+  for person in prefs:
+    for item in prefs[person]:
+      result.setdefault(item,{})
+
+      # 将物品和人员对换
+      result[item][person]=prefs[person][item]
+  return result
 
