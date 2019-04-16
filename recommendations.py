@@ -1,8 +1,7 @@
 #!/user/bin/python
 # -*- coding: utf-8 -*-
 
-# A dictionary of movie critics and their ratings of a small
-# set of movies
+# 用户-电影评分词典
 critics={
   'Lisa Rose': {
     'Lady in the Water': 2.5,
@@ -162,3 +161,51 @@ def transformPrefs(prefs):
       result[item][person]=prefs[person][item]
   return result
 
+
+def calculateSimilarItems(prefs,n=10):
+  # 建立字典，以给出与这些物品最相近的其他所有物品
+  result={}
+
+  # 以物品为中心，倒置偏好矩阵（有关物品-用户评价情况的列表）
+  itemPrefs=transformPrefs(prefs)
+  c=0
+  for item in itemPrefs:
+    # 对大数据集更新状态变量
+    c+=1
+    if c%100==0: print "%d / %d" % (c,len(itemPrefs))
+    # 寻找最相似的物品
+    scores=topMatches(itemPrefs,item,n=n,similarity=sim_distance)
+    result[item]=scores
+  return result
+
+
+# 利用反映物品相似度的字典来给出推荐
+def getRecommendedItems(prefs,itemMatch,user):
+  userRatings=prefs[user]
+  scores={}
+  totalSim={}
+
+  # 循环遍历由当前用户评分的物品
+  for (item,rating) in userRatings.items():
+
+    # 循环遍历与当前物品相近的物品
+    for (similarity,item2) in itemMatch[item]:
+
+      # 如果该用户已经对当前物品做过评价，则忽略
+      if item2 in userRatings: continue
+
+      # 评价值与相似度的加权之和
+      scores.setdefault(item2,0)
+      scores[item2]+=similarity*rating
+
+      # 全部相似度之和
+      totalSim.setdefault(item2,0)
+      totalSim[item2]+=similarity
+
+  # 将每个合计值除以加权和，求平均值
+  rankings=[(score/totalSim[item],item) for item,score in scores.items()]
+
+  # 从高到低返回评分结果
+  rankings.sort()
+  rankings.reverse()
+  return rankings
